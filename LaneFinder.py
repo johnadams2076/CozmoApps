@@ -181,7 +181,7 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=14):
     print('right avg', lineRightAvg)
     
     # @TODO Hardcoding is bad. Innovate!
-    minY = 0
+    minY = 40
     maxY = img.shape[0]
     
     if  np.array(lineLeftAvg).any() and lineLeftAvg.any() !=  np.nan: 
