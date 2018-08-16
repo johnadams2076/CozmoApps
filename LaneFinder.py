@@ -97,7 +97,10 @@ from IPython import get_ipython
 # In[31]:
 
 import math
+import collections
 
+frameStackLeftLane = collections.deque(maxlen=5)
+frameStackRightLane = collections.deque(maxlen=5)
 def grayscale(img):
     """Applies the Grayscale transform
     This will return an image with only one color channel
@@ -162,38 +165,52 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=14):
     
     lineLeft = []
     lineRight= []
-    for line in lines:
-        for x1,y1,x2,y2 in line:
-            slope = ((y2-y1)/(x2-x1))
-            if slope <= 0:
-                lineLeft.append(line)
-            else:
-                lineRight.append(line)
-    #for x1,y1,x2,y2 in lineLeft:
-    lineLeftAvg = []
-    lineRightAvg = []
-    if np.array(lineLeft).any():
-        lineLeftAvg = np.average(lineLeft, axis = 0)
-    if np.array(lineRight).any():
-        lineRightAvg = np.average(lineRight, axis = 0)
+    if np.array(lines).any():
+        for line in lines:
+            for x1,y1,x2,y2 in line:
+                slope = ((y2-y1)/(x2-x1))
+                if slope <= 0:
+                    lineLeft.append(line)
+                else:
+                    lineRight.append(line)
 
-    print('left avg', lineLeftAvg)
-    print('right avg', lineRightAvg)
-    
+    line_left_avg = []
+    line_right_avg = []
+    # for x1,y1,x2,y2 in lineLeft:
+    if np.array(lineLeft).any():
+        line_left_avg_interm = np.average(lineLeft, axis=0)
+        frameStackLeftLane.append(line_left_avg_interm)
+    #elif np.array(frameStackLeftLane).any():
+        #frameStackLeftLane.popleft()
+    if np.array(frameStackLeftLane).any():
+        line_left_avg = np.average(frameStackLeftLane,  axis=0)
+
+    if np.array(lineRight).any():
+        line_right_avg_interm = np.average(lineRight, axis=0)
+        frameStackRightLane.append(line_right_avg_interm)
+    #elif np.array(frameStackRightLane).any():
+        #frameStackRightLane.popleft()
+
+    if np.array(frameStackRightLane).any():
+        line_right_avg = np.average(frameStackRightLane,  axis=0)
+
+    print('left avg', line_left_avg)
+    print('right avg', line_right_avg)
+
     # @TODO Hardcoding is bad. Innovate!
-    minY = 40
+    minY = math.floor(img.shape[0] * (1/5))
     maxY = img.shape[0]
     
-    if  np.array(lineLeftAvg).any() and lineLeftAvg.any() !=  np.nan: 
-        x1LeftAvg,y1LeftAvg,x2LeftAvg,y2LeftAvg = lineLeftAvg[0]
+    if np.array(line_left_avg).any() and line_left_avg.any() != np.nan:
+        x1LeftAvg,y1LeftAvg,x2LeftAvg,y2LeftAvg = line_left_avg[0]
         [slopeLeft, interceptLeft] = np.polyfit([x1LeftAvg, x2LeftAvg ], [y1LeftAvg, y2LeftAvg], 1)
         minLeftX = math.floor((minY - interceptLeft) / slopeLeft)
         maxLeftX = math.floor((maxY - interceptLeft) / slopeLeft)
         # Left Lane            
         cv2.line(img, (minLeftX, minY), (maxLeftX, maxY), color, thickness)
         
-    if  np.array(lineRightAvg).any() and lineRightAvg.any() != np.nan: 
-        x1RightAvg,y1RightAvg,x2RightAvg,y2RightAvg = lineRightAvg[0]
+    if np.array(line_right_avg).any() and line_right_avg.any() != np.nan:
+        x1RightAvg,y1RightAvg,x2RightAvg,y2RightAvg = line_right_avg[0]
         [slopeRight, interceptRight] = np.polyfit([x1RightAvg, x2RightAvg ], [y1RightAvg, y2RightAvg], 1)
         minRightX = math.floor((minY - interceptRight) / slopeRight)
         maxRightX = math.floor((maxY - interceptRight) / slopeRight) 
@@ -254,9 +271,11 @@ import os
 # then save them to the test_images_output directory.
 
 def pipeline(image):
-    
+
+    #Convert to HSV
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
     # Grayscale the image
-    grayscaleimage = grayscale(image)
+    grayscaleimage = grayscale(hsv_image)
     
     # Define a kernel size and apply Gaussian smoothing
     gaussblurimage = gaussian_blur(grayscaleimage, kernel_size = 7)
@@ -264,15 +283,15 @@ def pipeline(image):
      
     # This time we are defining a four sided polygon to mask
     imshape = image.shape
-    vertices = np.array([[(150,imshape[0]),(450, 311), (470, 311), (950,imshape[0])]], dtype=np.int32)
-    #roiImage = region_of_interest(cannyImage, vertices)
+    vertices = np.array([[(0,imshape[0]),(imshape[1]*(1/4), imshape[0] * (1/3)), (imshape[1]*(3/4), imshape[0] * (1/3)), (imshape[1],imshape[0])]], dtype=np.int32)
+    roiImage = region_of_interest(cannyimage, vertices)
     # Define the Hough transform parameters
     rho = 2 # distance resolution in pixels of the Hough grid
     theta = np.pi/180 # angular resolution in radians of the Hough grid
     threshold = 15     # minimum number of votes (intersections in Hough grid cell)
     min_line_len = 40 #minimum number of pixels making up a line
     max_line_gap = 20    # maximum gap in pixels between connectable line segments
-    line_image = hough_lines(cannyimage, rho, theta, threshold, min_line_len, max_line_gap)
+    line_image = hough_lines(roiImage, rho, theta, threshold, min_line_len, max_line_gap)
     
     weightedimage = weighted_img(image, line_image, α=0.8, β=1., γ=0.)
     return weightedimage

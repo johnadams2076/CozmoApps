@@ -178,13 +178,14 @@ class CamMotion:
     def on_new_camera_image(self, evt, **kwargs):
         '''Processes the blobs in Cozmo's view, and determines the correct reaction.'''
         highres_image = self.robot.world.latest_image.raw_image
-        opencvimage = np.array(highres_image.resize((320,120), resample = PIL.Image.LANCZOS).convert('RGB'))
+        opencvimage = np.array(highres_image.resize((320,240), resample = PIL.Image.LANCZOS).convert('RGB'))
+        #opencvimage = np.array(highres_image.convert('RGB'))
         #print('highres_image',opencvImage)
         weightedopencvimage = pipeline(opencvimage)
-        print(weightedopencvimage)
-        plt.imshow(weightedopencvimage)
+        #print(weightedopencvimage)
+        #plt.imshow(weightedopencvimage)
         self.video.write(weightedopencvimage)
-        superimposedimage = PIL.Image.fromarray(weightedopencvimage)
+        #superimposedimage = PIL.Image.fromarray(weightedopencvimage)
 
 
     def drive_to_charger(self):
@@ -244,24 +245,24 @@ class CamMotion:
         self.robot.set_head_angle(util.degrees(0), duration=10.0).wait_for_completed(30)
         self.robot.set_lift_height(1.0).wait_for_completed(30)
 
-        # T1 - 640
-        # T2 - 540
-        # T3 - 630
-        # T4 - 540
+        # T1 - 610
+        # T2 - 535
+        # T3 - 620
+        # T4 - 530
         # Drive forwards for 150 millimeters at 50 millimeters-per-second.
-        self.robot.drive_straight(distance_mm(645), speed_mmps(50)).wait_for_completed(30)
+        self.robot.drive_straight(distance_mm(615), speed_mmps(50)).wait_for_completed(30)
 
         # Turn 90 degrees to the left.
         # Note: To turn to the right, just use a negative number.
         self.robot.turn_in_place(degrees(-90)).wait_for_completed(30)
 
-        self.robot.drive_straight(distance_mm(540), speed_mmps(50)).wait_for_completed(30)
+        self.robot.drive_straight(distance_mm(530), speed_mmps(50)).wait_for_completed(30)
         self.robot.turn_in_place(degrees(-90)).wait_for_completed(30)
 
-        self.robot.drive_straight(distance_mm(625), speed_mmps(50)).wait_for_completed(30)
+        self.robot.drive_straight(distance_mm(610), speed_mmps(50)).wait_for_completed(30)
         self.robot.turn_in_place(degrees(-90)).wait_for_completed(30)
 
-        self.robot.drive_straight(distance_mm(540), speed_mmps(50)).wait_for_completed(30)
+        self.robot.drive_straight(distance_mm(535), speed_mmps(50)).wait_for_completed(30)
         self.robot.turn_in_place(degrees(-90)).wait_for_completed(30)
 
     def test_run_on_track(robot):
