@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import cv2
 
 # Load our image
-binary_warped = mpimg.imread('../sobel/colorspaces/colorspace_test_images/warped-example.jpg')
+binary_warped = mpimg.imread('../sobel/colorspaces/images/warped-example.jpg')
 
 
 def find_lane_pixels(binary_warped):
@@ -97,7 +97,6 @@ def fit_polynomial(binary_warped):
     ### TO-DO: Fit a second order polynomial to each using `np.polyfit` ###
     left_fit = np.polyfit(lefty, leftx , 2)
     right_fit = np.polyfit(righty, rightx, 2)
-
     # Generate x and y values for plotting
     ploty = np.linspace(0, binary_warped.shape[0] - 1, binary_warped.shape[0])
     try:

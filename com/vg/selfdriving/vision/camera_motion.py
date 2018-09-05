@@ -37,9 +37,7 @@ except ImportError:
 import cozmo
 from cozmo.util import degrees, distance_mm, speed_mmps
 
-from  LaneFinder  import pipeline
-
-import matplotlib.pyplot as plt
+from com.vg.selfdriving.vision.LaneFinder import pipeline
 
 # A global string value to display in the camera viewer window to make it more
 # obvious what the example program is currently doing.
